@@ -91,6 +91,7 @@ module.exports = {
           items: [
             "userguide/nvidia-device/dynamic-resource-allocation",
             "userguide/nvidia-device/dynamic-mig-support",
+            "userguide/nvidia-device/numa-alignment",
             "userguide/nvidia-device/scheduling-policy",
             "userguide/nvidia-device/specify-device-memory-usage",
             "userguide/nvidia-device/specify-device-core-usage",
