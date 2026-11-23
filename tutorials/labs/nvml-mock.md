@@ -552,6 +552,24 @@ The annotation holds two colon-separated device entries with different UUIDs, on
 
 :::
 
+## Troubleshooting
+
+### Missing `nvidia-modeset` {#missing-nvidia-modeset}
+
+On a host with NVIDIA GPUs, HAMi may detect `/dev/nvidia-modeset` and pass the corresponding mock path to kubelet. If the mock driver directory lacks that device node, the Pod can be scheduled but its container fails to start. Look for this error in the Pod events.
+
+```text
+lstat /var/lib/nvml-mock/driver/dev/nvidia-modeset: no such file or directory
+```
+
+Before you retry on a GPU host, isolate its real NVIDIA device nodes from the test containers. If you cannot isolate them, run the lab on a host without NVIDIA GPUs.
+
+1. Change `helm install` to `helm upgrade --install` in the [HAMi install command](#31-install-via-helm).
+2. Keep the existing Helm settings and add `--set devicePlugin.passDeviceSpecsEnabled=false`. Run the command.
+3. Wait for the device plugin rollout to finish, then recreate the affected test Pod.
+
+HAMi's `Allocate` response still sets `NVIDIA_VISIBLE_DEVICES` to the simulated GPU UUID. The setting omits HAMi's `DeviceSpec` entries. nvml-mock can still inject device nodes.
+
 ## Cleanup
 
 Delete all test Pods:

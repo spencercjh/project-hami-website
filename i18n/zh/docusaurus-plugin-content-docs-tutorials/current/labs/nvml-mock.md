@@ -549,6 +549,24 @@ GPU-b300b300-0000-0000-0000-000000000000,NVIDIA,20000,0:GPU-b300b300-0000-0000-0
 
 :::
 
+## 故障排查
+
+### 缺少 `nvidia-modeset` 设备节点 {#missing-nvidia-modeset}
+
+在装有 NVIDIA GPU 的宿主机上，HAMi 可能检测到 `/dev/nvidia-modeset`，并将对应的模拟设备路径传给 kubelet。如果模拟驱动目录缺少该设备节点，Pod 可以完成调度，但容器启动失败。在 Pod 事件中检查以下错误。
+
+```text
+lstat /var/lib/nvml-mock/driver/dev/nvidia-modeset: no such file or directory
+```
+
+在 GPU 宿主机上重试前，确保测试容器无法访问宿主机的真实 NVIDIA 设备节点。如果无法隔离，请在没有 NVIDIA GPU 的宿主机上运行本实验。
+
+1. 在 [HAMi 安装命令](#31-通过-helm-安装)中，将 `helm install` 改为 `helm upgrade --install`。
+2. 保留原有的 Helm 配置，并添加 `--set devicePlugin.passDeviceSpecsEnabled=false`。执行修改后的命令。
+3. 等待设备插件更新完成，再重新创建受影响的测试 Pod。
+
+HAMi 的 `Allocate` 响应仍会通过 `NVIDIA_VISIBLE_DEVICES` 传递模拟 GPU 的 UUID。该设置会省略 HAMi 提供的 `DeviceSpec` 条目，nvml-mock 仍可注入设备节点。
+
 ## 清理
 
 删除所有测试 Pod：
